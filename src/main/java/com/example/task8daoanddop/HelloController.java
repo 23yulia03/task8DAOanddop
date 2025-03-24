@@ -8,6 +8,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
 public class HelloController {
 
     @FXML private TableView<Product> table;
+    @FXML private TableColumn<Product, Integer> colId;       // Новая колонка для ID
     @FXML private TableColumn<Product, String> colName;
     @FXML private TableColumn<Product, Integer> colCount;
     @FXML private TableColumn<Product, String> colTag;
@@ -21,15 +22,18 @@ public class HelloController {
 
     @FXML
     public void initialize() {
+        // Привязка колонок к свойствам Product
+        colId.setCellValueFactory(new PropertyValueFactory<>("id")); // Привязка для ID
         colName.setCellValueFactory(new PropertyValueFactory<>("name"));
         colCount.setCellValueFactory(new PropertyValueFactory<>("count"));
         colTag.setCellValueFactory(cellData ->
                 new javafx.beans.property.SimpleStringProperty(cellData.getValue().getTag().getName()));
 
+        // Загрузка данных
         table.setItems(productDAO.getProducts());
         tagComboBox.setItems(productDAO.getTags());
 
-        // Инициализация значений ComboBox
+        // Инициализация ComboBox для выбора источника данных
         dataSourceComboBox.setItems(FXCollections.observableArrayList("PostgreSQL", "Excel", "In-Memory"));
         dataSourceComboBox.setValue("PostgreSQL");
     }

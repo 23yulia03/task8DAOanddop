@@ -6,9 +6,9 @@ import javafx.collections.ObservableList;
 import java.sql.*;
 
 public class PostgresProductDAO implements ProductDAO {
-    private static final String URL = "jdbc:postgresql://localhost:5432/products_db";
+    private static final String URL = "jdbc:postgresql://localhost:5432/Products";
     private static final String USER = "postgres";
-    private static final String PASSWORD = "password";
+    private static final String PASSWORD = "123123123";
 
     private ObservableList<Product> products = FXCollections.observableArrayList();
     private ObservableList<Tag> tags = FXCollections.observableArrayList();

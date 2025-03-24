@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.util.Iterator;
 
 public class ExcelProductDAO implements ProductDAO {
-    private static final String FILE_PATH = "products.xlsx";
+    private static final String FILE_PATH = "C:/Users/kozlo/IdeaProjects/task8DAOanddop/products.xlsx";
     private ObservableList<Product> products = FXCollections.observableArrayList();
     private ObservableList<Tag> tags = FXCollections.observableArrayList();
 

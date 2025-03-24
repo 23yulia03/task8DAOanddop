@@ -27,6 +27,7 @@
     <!-- Таблица с продуктами -->
     <TableView fx:id="table" VBox.vgrow="ALWAYS">
         <columns>
+            <TableColumn text="ID" fx:id="colId"/> <!-- Новая колонка для ID -->
             <TableColumn text="Название" fx:id="colName"/>
             <TableColumn text="Количество" fx:id="colCount"/>
             <TableColumn text="Тег" fx:id="colTag"/>

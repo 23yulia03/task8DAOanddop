@@ -5,6 +5,11 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 
+/**
+ * Класс "HelloController" управляет пользовательским интерфейсом приложения.
+ * Позволяет добавлять, редактировать, удалять продукты и теги.
+ * Поддерживает выбор источника данных: PostgreSQL, Excel или In-Memory.
+ */
 public class HelloController {
 
     @FXML private TableView<Product> table;

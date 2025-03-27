@@ -5,19 +5,25 @@ import javafx.collections.ObservableList;
 
 import java.sql.*;
 
+/**
+ * Класс "PostgresProductDAO" реализует интерфейс ProductDAO.
+ * Использует базу данных PostgreSQL для хранения списка продуктов и категорий.
+ * Позволяет загружать, добавлять, обновлять и удалять данные в БД.
+ */
 public class PostgresProductDAO implements ProductDAO {
     private static final String URL = "jdbc:postgresql://localhost:5432/Products";
     private static final String USER = "postgres";
     private static final String PASSWORD = "123123123";
 
-    private ObservableList<Product> products = FXCollections.observableArrayList();
-    private ObservableList<Tag> tags = FXCollections.observableArrayList();
+    private ObservableList<Product> products = FXCollections.observableArrayList(); // Список продуктов
+    private ObservableList<Tag> tags = FXCollections.observableArrayList(); // Список тегов
 
     public PostgresProductDAO() {
-        loadTags();
-        loadProducts();
+        loadTags();    // Загружаем теги из БД
+        loadProducts(); // Загружаем продукты из БД
     }
 
+    // Метод загрузки тегов из базы данных
     private void loadTags() {
         try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
              Statement stmt = conn.createStatement();
@@ -30,6 +36,7 @@ public class PostgresProductDAO implements ProductDAO {
         }
     }
 
+    // Метод загрузки продуктов из базы данных
     private void loadProducts() {
         try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
              Statement stmt = conn.createStatement();
@@ -54,6 +61,7 @@ public class PostgresProductDAO implements ProductDAO {
         return tags;
     }
 
+    // Метод добавления продукта в базу данных
     @Override
     public void addProduct(int id, String name, int count, Tag tag) {
         String sql = "INSERT INTO products (id, name, count, tag_id) VALUES (?, ?, ?, ?)";
@@ -64,12 +72,13 @@ public class PostgresProductDAO implements ProductDAO {
             stmt.setInt(3, count);
             stmt.setInt(4, tag.getId());
             stmt.executeUpdate();
-            products.add(new Product(id, name, count, tag));
+            products.add(new Product(id, name, count, tag)); // Добавляем продукт в список
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
+    // Метод обновления данных о продукте в базе данных
     @Override
     public void updateProduct(Product product, String newName, int newCount, Tag newTag) {
         String sql = "UPDATE products SET name = ?, count = ?, tag_id = ? WHERE id = ?";
@@ -80,7 +89,7 @@ public class PostgresProductDAO implements ProductDAO {
             stmt.setInt(3, newTag.getId());
             stmt.setInt(4, product.getId());
             stmt.executeUpdate();
-            product.setName(newName);
+            product.setName(newName);  // Обновляем объект в списке
             product.setCount(newCount);
             product.setTag(newTag);
         } catch (SQLException e) {
@@ -88,6 +97,7 @@ public class PostgresProductDAO implements ProductDAO {
         }
     }
 
+    // Метод удаления продукта из базы данных
     @Override
     public void deleteProduct(Product product) {
         String sql = "DELETE FROM products WHERE id = ?";
@@ -95,12 +105,13 @@ public class PostgresProductDAO implements ProductDAO {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, product.getId());
             stmt.executeUpdate();
-            products.remove(product);
+            products.remove(product); // Удаляем продукт из списка
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
+    // Метод добавления нового тега в базу данных
     @Override
     public void addTag(int id, String name) {
         String sql = "INSERT INTO tags (id, name) VALUES (?, ?)";
@@ -109,7 +120,7 @@ public class PostgresProductDAO implements ProductDAO {
             stmt.setInt(1, id);
             stmt.setString(2, name);
             stmt.executeUpdate();
-            tags.add(new Tag(id, name));
+            tags.add(new Tag(id, name)); // Добавляем тег в список
         } catch (SQLException e) {
             e.printStackTrace();
         }

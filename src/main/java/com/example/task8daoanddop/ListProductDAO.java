@@ -42,4 +42,15 @@ public class ListProductDAO implements ProductDAO {
     public void addTag(int id, String name) {
         tags.add(new Tag(id, name));
     }
+
+    public ListProductDAO() {
+        // Примеры тестовых данных
+        tags.add(new Tag(1, "Электроника"));
+        tags.add(new Tag(2, "Одежда"));
+        tags.add(new Tag(3, "Мебель"));
+
+        products.add(new Product(1, "Ноутбук", 10, tags.get(0)));
+        products.add(new Product(2, "Футболка", 20, tags.get(1)));
+        products.add(new Product(3, "Стол", 30, tags.get(2)));
+    }
 }

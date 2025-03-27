@@ -11,7 +11,7 @@ public class TestConnection {
 
     public static void main(String[] args) {
         try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD)) {
-            System.out.println("Подключение успешно!");
+            System.out.println(" Подключение успешно!");
         } catch (SQLException e) {
             System.out.println("Ошибка подключения!");
             e.printStackTrace();

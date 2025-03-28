@@ -34,7 +34,7 @@
     <!-- Таблица с продуктами -->
     <TableView fx:id="table" VBox.vgrow="ALWAYS">
         <columns>
-            <TableColumn text="ID" fx:id="colId"/> <!-- Новая колонка для ID -->
+            <TableColumn text="ID" fx:id="colId"/>
             <TableColumn text="Название" fx:id="colName"/>
             <TableColumn text="Количество" fx:id="colCount"/>
             <TableColumn text="Тег" fx:id="colTag"/>
@@ -53,7 +53,6 @@
         <Button text="Добавить" onAction="#addProduct"/>
         <Button text="Обновить" onAction="#updateProduct"/>
         <Button text="Удалить" onAction="#deleteProduct"/>
-        <Button text="Очистить поля" onAction="#clearFields"/>
     </HBox>
 
     <!-- Поля для добавления нового тега -->

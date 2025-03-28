@@ -5,8 +5,8 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.paint.Color;
 
-import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -34,24 +34,78 @@ public class HelloController {
     @FXML
     public void initialize() {
         // Настройка таблицы
-        colId.setCellValueFactory(new PropertyValueFactory<>("id"));
-        colName.setCellValueFactory(new PropertyValueFactory<>("name"));
-        colCount.setCellValueFactory(new PropertyValueFactory<>("count"));
-        colTag.setCellValueFactory(cellData ->
-                new javafx.beans.property.SimpleStringProperty(cellData.getValue().getTag().getName()));
+        configureTableColumns();
 
         // Загрузка данных
         refreshData();
 
         // Настройка ComboBox для выбора источника данных
+        configureDataSourceComboBox();
+
+        // Настройка поиска
+        configureSearch();
+
+        // Настройка обработчика выбора строки
+        configureRowSelection();
+
+        // Настройка внешнего вида строк таблицы
+        configureTableRowFactory();
+    }
+
+    private void configureTableColumns() {
+        colId.setCellValueFactory(new PropertyValueFactory<>("id"));
+        colName.setCellValueFactory(new PropertyValueFactory<>("name"));
+        colCount.setCellValueFactory(new PropertyValueFactory<>("count"));
+        colTag.setCellValueFactory(cellData ->
+                new javafx.beans.property.SimpleStringProperty(
+                        cellData.getValue().getTag() != null ?
+                                cellData.getValue().getTag().getName() : ""));
+    }
+
+    private void configureDataSourceComboBox() {
         dataSourceComboBox.setItems(FXCollections.observableArrayList(
                 "PostgreSQL", "Excel", "In-Memory"));
         dataSourceComboBox.setValue("PostgreSQL");
+    }
 
-        // Настройка поиска (реакция на ввод текста)
+    private void configureSearch() {
         searchField.textProperty().addListener((observable, oldValue, newValue) -> {
             searchProducts();
         });
+    }
+
+    private void configureRowSelection() {
+        table.getSelectionModel().selectedItemProperty().addListener(
+                (observable, oldValue, newValue) -> {
+                    if (newValue != null) {
+                        fillFieldsWithSelectedProduct(newValue);
+                    }
+                });
+    }
+
+    private void configureTableRowFactory() {
+        table.setRowFactory(tv -> {
+            TableRow<Product> row = new TableRow<>();
+            row.selectedProperty().addListener((obs, wasSelected, isNowSelected) -> {
+                if (isNowSelected) {
+                    row.setStyle("-fx-background-color: #0e74be;");
+                } else {
+                    row.setStyle("");
+                }
+            });
+            return row;
+        });
+    }
+
+    private void fillFieldsWithSelectedProduct(Product product) {
+        nameField.setText(product.getName() != null ? product.getName() : "");
+        countField.setText(String.valueOf(product.getCount()));
+
+        if (product.getTag() != null) {
+            tagComboBox.getSelectionModel().select(product.getTag());
+        } else {
+            tagComboBox.getSelectionModel().clearSelection();
+        }
     }
 
     private void refreshData() {
@@ -70,8 +124,9 @@ public class HelloController {
         }
 
         ObservableList<Product> filteredProducts = allProducts.stream()
-                .filter(p -> p.getName().toLowerCase().contains(searchText) ||
-                        p.getTag().getName().toLowerCase().contains(searchText))
+                .filter(p -> (p.getName() != null && p.getName().toLowerCase().contains(searchText)) ||
+                        (p.getTag() != null && p.getTag().getName() != null &&
+                                p.getTag().getName().toLowerCase().contains(searchText)))
                 .collect(Collectors.toCollection(FXCollections::observableArrayList));
 
         table.setItems(filteredProducts);
@@ -137,6 +192,7 @@ public class HelloController {
         if (selected != null) {
             productDAO.deleteProduct(selected);
             refreshData();
+            clearFields();
         } else {
             showAlert("Ошибка", "Выберите продукт для удаления!");
         }
@@ -160,6 +216,12 @@ public class HelloController {
         countField.clear();
         tagComboBox.getSelectionModel().clearSelection();
         tagField.clear();
+        table.getSelectionModel().clearSelection();
+    }
+
+    @FXML
+    private void cancelSelection() {
+        clearFields();
     }
 
     @FXML
@@ -175,6 +237,7 @@ public class HelloController {
         }
 
         refreshData();
+        clearFields();
     }
 
     private void showAlert(String title, String message) {

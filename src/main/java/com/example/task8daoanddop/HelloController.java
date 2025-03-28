@@ -151,7 +151,7 @@ public class HelloController {
 
         try {
             int count = Integer.parseInt(countText);
-            productDAO.addProduct(productDAO.getProducts().size() + 1, name, count, tag);
+            productDAO.addProduct(name, count, tag); // Убрали передачу ID
             refreshData();
             clearFields();
         } catch (NumberFormatException e) {

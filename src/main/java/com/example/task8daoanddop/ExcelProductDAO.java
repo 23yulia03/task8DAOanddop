@@ -46,21 +46,48 @@ public class ExcelProductDAO implements ProductDAO {
 
             while (rowIterator.hasNext()) {
                 Row row = rowIterator.next();
-                int id = (int) row.getCell(0).getNumericCellValue();
-                String name = row.getCell(1).getStringCellValue();
-                int count = (int) row.getCell(2).getNumericCellValue();
-                int tagId = (int) row.getCell(3).getNumericCellValue();
+                try {
+                    // Проверяем и извлекаем данные из ячеек с учетом их типов
+                    int id = getNumericCellValue(row.getCell(0));
+                    String name = row.getCell(1).getStringCellValue();
+                    int count = getNumericCellValue(row.getCell(2));
+                    int tagId = getNumericCellValue(row.getCell(3));
 
-                Tag tag = tags.stream()
-                        .filter(t -> t.getId() == tagId)
-                        .findFirst()
-                        .orElse(null);
+                    // Находим тег по ID
+                    Tag tag = tags.stream()
+                            .filter(t -> t.getId() == tagId)
+                            .findFirst()
+                            .orElse(null);
 
-                products.add(new Product(id, name, count, tag));
+                    // Добавляем продукт в список
+                    products.add(new Product(id, name, count, tag));
+                } catch (Exception e) {
+                    System.out.println("Ошибка при обработке строки: " + e.getMessage());
+                }
             }
         } catch (IOException e) {
             // Если файл не существует, создадим его при первом сохранении
             System.out.println("Файл не найден, будет создан при первом сохранении");
+        }
+    }
+
+    private int getNumericCellValue(Cell cell) {
+        if (cell == null) {
+            return 0; // или какое-то другое значение по умолчанию
+        }
+
+        if (cell.getCellType() == CellType.NUMERIC) {
+            return (int) cell.getNumericCellValue();
+        } else if (cell.getCellType() == CellType.STRING) {
+            try {
+                return Integer.parseInt(cell.getStringCellValue().trim());
+            } catch (NumberFormatException e) {
+                // Если строка не может быть преобразована в число, например, в случае с текстом
+                return 0; // или можно выбросить исключение в зависимости от логики
+            }
+        } else {
+            // В случае других типов данных, например, если ячейка пустая
+            return 0;
         }
     }
 

@@ -52,9 +52,17 @@ public class ListProductDAO implements ProductDAO {
         tags.add(new Tag(2, "Одежда"));
         tags.add(new Tag(3, "Мебель"));
 
-        products.add(new Product(1, "Ноутбук", 10, tags.get(0)));
-        products.add(new Product(2, "Футболка", 20, tags.get(1)));
-        products.add(new Product(3, "Стол", 30, tags.get(2)));
+        // Добавление продуктов
+        products.add(new Product(1, "Смартфон", 15, tags.get(0)));
+        products.add(new Product(2, "Ноутбук", 8, tags.get(0)));
+        products.add(new Product(3, "Футболка", 30, tags.get(1)));
+        products.add(new Product(5, "Диван", 5, tags.get(2)));
+        products.add(new Product(6, "Стул", 12, tags.get(2)));
+        products.add(new Product(7, "Наушники", 25, tags.get(0)));
+        products.add(new Product(8, "Куртка", 10, tags.get(1)));
+        products.add(new Product(9, "Стол", 7, tags.get(2)));
+        products.add(new Product(10, "Планшет", 9, tags.get(0)));
+        products.add(new Product(11, "Стол", 32, tags.get(2)));
 
         // Устанавливаем следующий ID
         nextProductId = products.size() + 1;

@@ -24,6 +24,13 @@
         <Button text="Переключить" onAction="#switchDataSource"/>
     </HBox>
 
+    <!-- Поиск продуктов -->
+    <HBox spacing="10" alignment="CENTER">
+        <TextField fx:id="searchField" promptText="Поиск по названию" prefWidth="300"/>
+        <Button text="Найти" onAction="#searchProducts"/>
+        <Button text="Сбросить" onAction="#resetSearch"/>
+    </HBox>
+
     <!-- Таблица с продуктами -->
     <TableView fx:id="table" VBox.vgrow="ALWAYS">
         <columns>

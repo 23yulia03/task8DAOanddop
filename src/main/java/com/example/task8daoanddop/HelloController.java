@@ -1,9 +1,13 @@
 package com.example.task8daoanddop;
 
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Класс "HelloController" управляет пользовательским интерфейсом приложения.
@@ -13,7 +17,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
 public class HelloController {
 
     @FXML private TableView<Product> table;
-    @FXML private TableColumn<Product, Integer> colId;       // Новая колонка для ID
+    @FXML private TableColumn<Product, Integer> colId;
     @FXML private TableColumn<Product, String> colName;
     @FXML private TableColumn<Product, Integer> colCount;
     @FXML private TableColumn<Product, String> colTag;
@@ -22,25 +26,61 @@ public class HelloController {
     @FXML private ComboBox<Tag> tagComboBox;
     @FXML private TextField tagField;
     @FXML private ComboBox<String> dataSourceComboBox;
+    @FXML private TextField searchField;
 
-    private ProductDAO productDAO = new PostgresProductDAO(); // Изначально используем PostgreSQL
+    private ProductDAO productDAO = new PostgresProductDAO();
+    private ObservableList<Product> allProducts = FXCollections.observableArrayList();
 
     @FXML
     public void initialize() {
-        // Привязка колонок к свойствам Product
-        colId.setCellValueFactory(new PropertyValueFactory<>("id")); // Привязка для ID
+        // Настройка таблицы
+        colId.setCellValueFactory(new PropertyValueFactory<>("id"));
         colName.setCellValueFactory(new PropertyValueFactory<>("name"));
         colCount.setCellValueFactory(new PropertyValueFactory<>("count"));
         colTag.setCellValueFactory(cellData ->
                 new javafx.beans.property.SimpleStringProperty(cellData.getValue().getTag().getName()));
 
         // Загрузка данных
-        table.setItems(productDAO.getProducts());
-        tagComboBox.setItems(productDAO.getTags());
+        refreshData();
 
-        // Инициализация ComboBox для выбора источника данных
-        dataSourceComboBox.setItems(FXCollections.observableArrayList("PostgreSQL", "Excel", "In-Memory"));
+        // Настройка ComboBox для выбора источника данных
+        dataSourceComboBox.setItems(FXCollections.observableArrayList(
+                "PostgreSQL", "Excel", "In-Memory"));
         dataSourceComboBox.setValue("PostgreSQL");
+
+        // Настройка поиска (реакция на ввод текста)
+        searchField.textProperty().addListener((observable, oldValue, newValue) -> {
+            searchProducts();
+        });
+    }
+
+    private void refreshData() {
+        allProducts.setAll(productDAO.getProducts());
+        table.setItems(allProducts);
+        tagComboBox.setItems(productDAO.getTags());
+    }
+
+    @FXML
+    private void searchProducts() {
+        String searchText = searchField.getText().trim().toLowerCase();
+
+        if (searchText.isEmpty()) {
+            table.setItems(allProducts);
+            return;
+        }
+
+        ObservableList<Product> filteredProducts = allProducts.stream()
+                .filter(p -> p.getName().toLowerCase().contains(searchText) ||
+                        p.getTag().getName().toLowerCase().contains(searchText))
+                .collect(Collectors.toCollection(FXCollections::observableArrayList));
+
+        table.setItems(filteredProducts);
+    }
+
+    @FXML
+    private void resetSearch() {
+        searchField.clear();
+        table.setItems(allProducts);
     }
 
     @FXML
@@ -57,7 +97,8 @@ public class HelloController {
         try {
             int count = Integer.parseInt(countText);
             productDAO.addProduct(productDAO.getProducts().size() + 1, name, count, tag);
-            table.refresh();
+            refreshData();
+            clearFields();
         } catch (NumberFormatException e) {
             showAlert("Ошибка", "Количество должно быть числом!");
         }
@@ -83,7 +124,8 @@ public class HelloController {
         try {
             int newCount = Integer.parseInt(countText);
             productDAO.updateProduct(selected, newName, newCount, newTag);
-            table.refresh();
+            refreshData();
+            clearFields();
         } catch (NumberFormatException e) {
             showAlert("Ошибка", "Количество должно быть числом!");
         }
@@ -94,18 +136,10 @@ public class HelloController {
         Product selected = table.getSelectionModel().getSelectedItem();
         if (selected != null) {
             productDAO.deleteProduct(selected);
-            table.getItems().remove(selected);
+            refreshData();
         } else {
             showAlert("Ошибка", "Выберите продукт для удаления!");
         }
-    }
-
-    private void showAlert(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
     }
 
     @FXML
@@ -113,8 +147,8 @@ public class HelloController {
         String tagName = tagField.getText();
         if (!tagName.isEmpty()) {
             productDAO.addTag(productDAO.getTags().size() + 1, tagName);
-            tagComboBox.setItems(productDAO.getTags()); // Обновление списка тегов
-            tagField.clear(); // Очистка поля ввода
+            tagComboBox.setItems(productDAO.getTags());
+            tagField.clear();
         } else {
             showAlert("Ошибка", "Введите название тега!");
         }
@@ -132,7 +166,6 @@ public class HelloController {
     private void switchDataSource() {
         String selectedSource = dataSourceComboBox.getValue();
 
-        // Переключаем источник данных
         if ("PostgreSQL".equals(selectedSource)) {
             productDAO = new PostgresProductDAO();
         } else if ("Excel".equals(selectedSource)) {
@@ -141,8 +174,14 @@ public class HelloController {
             productDAO = new ListProductDAO();
         }
 
-        // Обновляем данные в таблице
-        table.setItems(productDAO.getProducts());
-        tagComboBox.setItems(productDAO.getTags());
+        refreshData();
+    }
+
+    private void showAlert(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 }

@@ -31,4 +31,4 @@
 ## Результат работы программы
 
 ![Результат работы программы]
-(C:\Users\kozlo\IdeaProjects\task8DAOanddop\image\img.png)
+(https://github.com/23yulia03/task8DAOanddop/blob/main/img.png?raw=true)

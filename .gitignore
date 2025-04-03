@@ -8,6 +8,11 @@
 # Исходный код
 !src/
 
+# Исключения для изображений в src
+!src/**/*.png
+!src/**/*.jpg
+!src/**/*.jpeg
+
 # Maven Wrapper
 !.mvn/wrapper/maven-wrapper.jar
 !.mvn/wrapper/maven-wrapper.properties

@@ -30,5 +30,4 @@
 
 ## Результат работы программы
 
-![Результат работы программы]
-(https://github.com/23yulia03/task8DAOanddop/blob/main/img.png?raw=true)
+![Результат работы программы](https://github.com/23yulia03/task8DAOanddop/blob/main/img.png?raw=true)

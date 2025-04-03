@@ -4,6 +4,9 @@
 !pom.xml
 !README.md
 !.gitignore
+!*.png       # Разрешаем все PNG в корне
+!*.jpg
+!*.jpeg
 
 # Исходный код
 !src/

@@ -5,8 +5,8 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.paint.Color;
 
+import java.sql.SQLException;
 import java.util.stream.Collectors;
 
 /**
@@ -28,11 +28,15 @@ public class HelloController {
     @FXML private ComboBox<String> dataSourceComboBox;
     @FXML private TextField searchField;
 
-    private ProductDAO productDAO = new PostgresProductDAO();
-    private ObservableList<Product> allProducts = FXCollections.observableArrayList();
+    private ProductDAO productDAO;
+    private final Config config = new Config();
+    private final ObservableList<Product> allProducts = FXCollections.observableArrayList();
 
     @FXML
-    public void initialize() {
+    public void initialize() throws SQLException {
+        // Инициализация DAO
+        productDAO = new PostgresProductDAO(config);
+
         // Настройка таблицы
         configureTableColumns();
 
@@ -151,10 +155,10 @@ public class HelloController {
 
         try {
             int count = Integer.parseInt(countText);
-            productDAO.addProduct(name, count, tag); // Убрали передачу ID
+            productDAO.addProduct(name, count, tag);
             refreshData();
             clearFields();
-        } catch (NumberFormatException e) {
+        } catch (NumberFormatException | SQLException e) {
             showAlert("Ошибка", "Количество должно быть числом!");
         }
     }
@@ -181,13 +185,13 @@ public class HelloController {
             productDAO.updateProduct(selected, newName, newCount, newTag);
             refreshData();
             clearFields();
-        } catch (NumberFormatException e) {
+        } catch (NumberFormatException | SQLException e) {
             showAlert("Ошибка", "Количество должно быть числом!");
         }
     }
 
     @FXML
-    private void deleteProduct() {
+    private void deleteProduct() throws SQLException {
         Product selected = table.getSelectionModel().getSelectedItem();
         if (selected != null) {
             productDAO.deleteProduct(selected);
@@ -199,7 +203,7 @@ public class HelloController {
     }
 
     @FXML
-    private void addTag() {
+    private void addTag() throws SQLException {
         String tagName = tagField.getText();
         if (!tagName.isEmpty()) {
             productDAO.addTag(productDAO.getTags().size() + 1, tagName);
@@ -227,17 +231,13 @@ public class HelloController {
     @FXML
     private void switchDataSource() {
         String selectedSource = dataSourceComboBox.getValue();
-
-        if ("PostgreSQL".equals(selectedSource)) {
-            productDAO = new PostgresProductDAO();
-        } else if ("Excel".equals(selectedSource)) {
-            productDAO = new ExcelProductDAO();
-        } else if ("In-Memory".equals(selectedSource)) {
-            productDAO = new ListProductDAO();
+        try {
+            productDAO = ProductDAOFactory.createProductDAO(selectedSource);
+            refreshData();
+            clearFields();
+        } catch (SQLException e) {
+            showAlert("Ошибка", "Не удалось подключиться к источнику данных: " + e.getMessage());
         }
-
-        refreshData();
-        clearFields();
     }
 
     private void showAlert(String title, String message) {

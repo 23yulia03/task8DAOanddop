@@ -16,15 +16,19 @@ import java.util.Iterator;
  * Позволяет загружать, добавлять, обновлять и удалять данные в файле.
  */
 public class ExcelProductDAO implements ProductDAO {
-    private static final String FILE_PATH = "products.xlsx";
-    private ObservableList<Product> products = FXCollections.observableArrayList();
-    private ObservableList<Tag> tags = FXCollections.observableArrayList();
+    private final String filePath;
+    private final ObservableList<Product> products = FXCollections.observableArrayList();
+    private final ObservableList<Tag> tags = FXCollections.observableArrayList();
     private int nextProductId = 1;
 
-    public ExcelProductDAO() {
+    public ExcelProductDAO(Config config) {
+        this.filePath = config.getExcelPath();
         loadTags();
         loadProducts();
-        // Инициализируем nextProductId
+        calculateNextId();
+    }
+
+    private void calculateNextId() {
         nextProductId = products.stream()
                 .mapToInt(Product::getId)
                 .max()
@@ -38,7 +42,7 @@ public class ExcelProductDAO implements ProductDAO {
     }
 
     private void loadProducts() {
-        try (FileInputStream fis = new FileInputStream(FILE_PATH);
+        try (FileInputStream fis = new FileInputStream(filePath);
              Workbook workbook = new XSSFWorkbook(fis)) {
 
             Sheet sheet = workbook.getSheetAt(0);
@@ -129,7 +133,7 @@ public class ExcelProductDAO implements ProductDAO {
 
     private void saveToFile() {
         try (Workbook workbook = new XSSFWorkbook();
-             FileOutputStream fos = new FileOutputStream(FILE_PATH)) {
+             FileOutputStream fos = new FileOutputStream(filePath)) {
 
             Sheet sheet = workbook.createSheet("Products");
 

@@ -4,65 +4,80 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import java.sql.*;
 
-/**
- * Класс "PostgresProductDAO" реализует интерфейс ProductDAO.
- * Использует базу данных PostgreSQL для хранения списка продуктов и категорий.
- * Позволяет загружать, добавлять, обновлять и удалять данные в БД.
- */
 public class PostgresProductDAO implements ProductDAO {
-    private static final String URL = "jdbc:postgresql://localhost:5432/Products";
-    private static final String USER = "postgres";
-    private static final String PASSWORD = "123123123";
+    private final String url;
+    private final String user;
+    private final String password;
+    private final ObservableList<Product> products = FXCollections.observableArrayList();
+    private final ObservableList<Tag> tags = FXCollections.observableArrayList();
 
-    private ObservableList<Product> products = FXCollections.observableArrayList();
-    private ObservableList<Tag> tags = FXCollections.observableArrayList();
-
-    public PostgresProductDAO() {
-        loadTags();
-        loadProducts();
+    public PostgresProductDAO(Config config) throws SQLException {
+        this.url = config.getDbUrl();
+        this.user = config.getDbUser();
+        this.password = config.getDbPassword();
+        loadData();
     }
 
-    private void loadTags() {
-        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
-             Statement stmt = conn.createStatement();
+    private void loadData() throws SQLException {
+        try (Connection conn = getConnection()) {
+            loadTags(conn);
+            loadProducts(conn);
+        }
+    }
+
+    private Connection getConnection() throws SQLException {
+        return DriverManager.getConnection(url, user, password);
+    }
+
+    private void loadTags(Connection conn) throws SQLException {
+        try (Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT * FROM tags")) {
+            tags.clear();
             while (rs.next()) {
                 tags.add(new Tag(rs.getInt("id"), rs.getString("name")));
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
     }
 
-    private void loadProducts() {
-        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
-             Statement stmt = conn.createStatement();
+    private void loadProducts(Connection conn) throws SQLException {
+        try (Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT * FROM products")) {
+            products.clear();
             while (rs.next()) {
                 int tagId = rs.getInt("tag_id");
-                Tag tag = tags.stream().filter(t -> t.getId() == tagId).findFirst().orElse(null);
-                products.add(new Product(rs.getInt("id"), rs.getString("name"), rs.getInt("count"), tag));
+                Tag tag = findTagById(tagId);
+                products.add(new Product(
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getInt("count"),
+                        tag));
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
+    }
+
+    private Tag findTagById(int tagId) {
+        return tags.stream()
+                .filter(t -> t.getId() == tagId)
+                .findFirst()
+                .orElse(null);
     }
 
     @Override
     public ObservableList<Product> getProducts() {
-        return products;
+        return FXCollections.unmodifiableObservableList(products);
     }
 
     @Override
     public ObservableList<Tag> getTags() {
-        return tags;
+        return FXCollections.unmodifiableObservableList(tags);
     }
 
     @Override
-    public void addProduct(String name, int count, Tag tag) {
+    public void addProduct(String name, int count, Tag tag) throws SQLException {
         String sql = "INSERT INTO products (name, count, tag_id) VALUES (?, ?, ?)";
-        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+        try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
             stmt.setString(1, name);
             stmt.setInt(2, count);
             stmt.setInt(3, tag.getId());
@@ -70,57 +85,52 @@ public class PostgresProductDAO implements ProductDAO {
 
             try (ResultSet rs = stmt.getGeneratedKeys()) {
                 if (rs.next()) {
-                    int generatedId = rs.getInt(1);
-                    products.add(new Product(generatedId, name, count, tag));
+                    products.add(new Product(rs.getInt(1), name, count, tag));
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
     }
 
     @Override
-    public void updateProduct(Product product, String newName, int newCount, Tag newTag) {
+    public void updateProduct(Product product, String newName, int newCount, Tag newTag) throws SQLException {
         String sql = "UPDATE products SET name = ?, count = ?, tag_id = ? WHERE id = ?";
-        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+        try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setString(1, newName);
             stmt.setInt(2, newCount);
             stmt.setInt(3, newTag.getId());
             stmt.setInt(4, product.getId());
             stmt.executeUpdate();
+
             product.setName(newName);
             product.setCount(newCount);
             product.setTag(newTag);
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
     }
 
     @Override
-    public void deleteProduct(Product product) {
+    public void deleteProduct(Product product) throws SQLException {
         String sql = "DELETE FROM products WHERE id = ?";
-        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+        try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setInt(1, product.getId());
             stmt.executeUpdate();
             products.remove(product);
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
     }
 
     @Override
-    public void addTag(int id, String name) {
+    public void addTag(int id, String name) throws SQLException {
         String sql = "INSERT INTO tags (id, name) VALUES (?, ?)";
-        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+        try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setInt(1, id);
             stmt.setString(2, name);
             stmt.executeUpdate();
             tags.add(new Tag(id, name));
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
     }
 }

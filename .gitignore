@@ -7,7 +7,7 @@
 !*.png       # Разрешаем все PNG в корне
 !*.jpg
 !*.jpeg
-!docs/use-case.md
+!use-case.md
 
 # Исходный код
 !src/

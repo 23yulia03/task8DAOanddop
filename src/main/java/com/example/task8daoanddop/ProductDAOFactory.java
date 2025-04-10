@@ -3,7 +3,7 @@ package com.example.task8daoanddop;
 import io.github.cdimascio.dotenv.Dotenv;
 import java.sql.SQLException;
 
- // Абстрактная фабрика для переключения
+// Абстрактная фабрика для переключения
 public class ProductDAOFactory {
     public static ProductDAO createProductDAO(String dataSourceType) throws SQLException {
         Config config = new Config(); // Используем конструктор по умолчанию

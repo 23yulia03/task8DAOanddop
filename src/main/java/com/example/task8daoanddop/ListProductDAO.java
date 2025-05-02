@@ -53,17 +53,17 @@ public class ListProductDAO implements ProductDAO {
         tags.add(new Tag(3, "Мебель"));
 
         // Добавление продуктов
-        products.add(new Product(1, "Смартфон", 15, tags.get(0)));
-        products.add(new Product(2, "Ноутбук", 8, tags.get(0)));
-        products.add(new Product(3, "Футболка", 30, tags.get(1)));
-        products.add(new Product(5, "Диван", 5, tags.get(2)));
-        products.add(new Product(6, "Стул", 12, tags.get(2)));
-        products.add(new Product(7, "Наушники", 25, tags.get(0)));
-        products.add(new Product(8, "Куртка", 10, tags.get(1)));
-        products.add(new Product(9, "Стол", 7, tags.get(2)));
-        products.add(new Product(10, "Планшет", 9, tags.get(0)));
-        products.add(new Product(11, "Стол", 32, tags.get(2)));
-        products.add(new Product(12, "Кресло", 25, tags.get(2)));
+        products.add(new Product(1, "Смартфон", 15, tags.get(0)));  // Электроника
+        products.add(new Product(2, "Ноутбук", 8, tags.get(0)));    // Электроника
+        products.add(new Product(3, "Футболка", 30, tags.get(1)));  // Одежда
+        products.add(new Product(4, "Диван", 5, tags.get(2)));      // Мебель
+        products.add(new Product(5, "Стул", 12, tags.get(2)));      // Мебель
+        products.add(new Product(6, "Наушники", 25, tags.get(0)));  // Электроника
+        products.add(new Product(7, "Куртка", 10, tags.get(1)));    // Одежда
+        products.add(new Product(8, "Стол", 7, tags.get(2)));       // Мебель
+        products.add(new Product(9, "Планшет", 9, tags.get(0)));   // Электроника
+        products.add(new Product(10, "Стол", 32, tags.get(2)));     // Мебель
+        products.add(new Product(11, "Кресло", 25, tags.get(2)));   // Мебель
 
         // Устанавливаем следующий ID
         nextProductId = products.size() + 1;

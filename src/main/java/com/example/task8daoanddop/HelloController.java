@@ -9,11 +9,6 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import java.sql.SQLException;
 import java.util.stream.Collectors;
 
-/**
- * Класс "HelloController" управляет пользовательским интерфейсом приложения.
- * Позволяет добавлять, редактировать, удалять продукты и теги.
- * Поддерживает выбор источника данных: PostgreSQL, Excel или In-Memory.
- */
 public class HelloController {
 
     @FXML private TableView<Product> table;
@@ -29,31 +24,21 @@ public class HelloController {
     @FXML private TextField searchField;
 
     private ProductDAO productDAO;
+    private ProductDatabaseManager dbManager;
     private final Config config = new Config();
     private final ObservableList<Product> allProducts = FXCollections.observableArrayList();
+    private String currentSource = "PostgreSQL";
 
     @FXML
     public void initialize() throws SQLException {
-        // Инициализация DAO
-        productDAO = new PostgresProductDAO(config);
-
-        // Настройка таблицы
+        dbManager = new ProductDatabaseManager(config);
+        productDAO = dbManager.getDAO(currentSource);
         configureTableColumns();
-
-        // Загрузка данных
-        refreshData();
-
-        // Настройка ComboBox для выбора источника данных
         configureDataSourceComboBox();
-
-        // Настройка поиска
         configureSearch();
-
-        // Настройка обработчика выбора строки
         configureRowSelection();
-
-        // Настройка внешнего вида строк таблицы
         configureTableRowFactory();
+        refreshData();
     }
 
     private void configureTableColumns() {
@@ -73,9 +58,7 @@ public class HelloController {
     }
 
     private void configureSearch() {
-        searchField.textProperty().addListener((observable, oldValue, newValue) -> {
-            searchProducts();
-        });
+        searchField.textProperty().addListener((observable, oldValue, newValue) -> searchProducts());
     }
 
     private void configureRowSelection() {
@@ -104,12 +87,7 @@ public class HelloController {
     private void fillFieldsWithSelectedProduct(Product product) {
         nameField.setText(product.getName() != null ? product.getName() : "");
         countField.setText(String.valueOf(product.getCount()));
-
-        if (product.getTag() != null) {
-            tagComboBox.getSelectionModel().select(product.getTag());
-        } else {
-            tagComboBox.getSelectionModel().clearSelection();
-        }
+        tagComboBox.getSelectionModel().select(product.getTag());
     }
 
     private void refreshData() {
@@ -121,7 +99,6 @@ public class HelloController {
     @FXML
     private void searchProducts() {
         String searchText = searchField.getText().trim().toLowerCase();
-
         if (searchText.isEmpty()) {
             table.setItems(allProducts);
             return;
@@ -155,7 +132,7 @@ public class HelloController {
 
         try {
             int count = Integer.parseInt(countText);
-            productDAO.addProduct(name, count, tag);
+            dbManager.addProductToAll(name, count, tag);
             refreshData();
             clearFields();
         } catch (NumberFormatException | SQLException e) {
@@ -182,7 +159,7 @@ public class HelloController {
 
         try {
             int newCount = Integer.parseInt(countText);
-            productDAO.updateProduct(selected, newName, newCount, newTag);
+            dbManager.updateProductInAll(selected, newName, newCount, newTag);
             refreshData();
             clearFields();
         } catch (NumberFormatException | SQLException e) {
@@ -191,14 +168,19 @@ public class HelloController {
     }
 
     @FXML
-    private void deleteProduct() throws SQLException {
+    private void deleteProduct() {
         Product selected = table.getSelectionModel().getSelectedItem();
-        if (selected != null) {
-            productDAO.deleteProduct(selected);
+        if (selected == null) {
+            showAlert("Ошибка", "Выберите продукт для удаления!");
+            return;
+        }
+
+        try {
+            dbManager.deleteProductFromAll(selected);
             refreshData();
             clearFields();
-        } else {
-            showAlert("Ошибка", "Выберите продукт для удаления!");
+        } catch (SQLException e) {
+            showAlert("Ошибка", "Ошибка при удалении: " + e.getMessage());
         }
     }
 
@@ -206,7 +188,8 @@ public class HelloController {
     private void addTag() throws SQLException {
         String tagName = tagField.getText();
         if (!tagName.isEmpty()) {
-            productDAO.addTag(productDAO.getTags().size() + 1, tagName);
+            int id = productDAO.getTags().size() + 1;
+            productDAO.addTag(id, tagName);
             tagComboBox.setItems(productDAO.getTags());
             tagField.clear();
         } else {
@@ -230,13 +213,13 @@ public class HelloController {
 
     @FXML
     private void switchDataSource() {
-        String selectedSource = dataSourceComboBox.getValue();
+        currentSource = dataSourceComboBox.getValue();
         try {
-            productDAO = ProductDAOFactory.createProductDAO(selectedSource);
+            productDAO = dbManager.getDAO(currentSource);
             refreshData();
             clearFields();
-        } catch (SQLException e) {
-            showAlert("Ошибка", "Не удалось подключиться к источнику данных: " + e.getMessage());
+        } catch (Exception e) {
+            showAlert("Ошибка", "Не удалось переключить источник данных: " + e.getMessage());
         }
     }
 

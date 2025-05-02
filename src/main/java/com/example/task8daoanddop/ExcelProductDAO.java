@@ -8,7 +8,9 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
 /**
  * Класс "ExcelProductDAO" реализует интерфейс ProductDAO.
@@ -20,6 +22,7 @@ public class ExcelProductDAO implements ProductDAO {
     private final ObservableList<Product> products = FXCollections.observableArrayList();
     private final ObservableList<Tag> tags = FXCollections.observableArrayList();
     private int nextProductId = 1;
+    private final Set<Integer> freedIds = new HashSet<>();  // Храним освобожденные ID
 
     public ExcelProductDAO(Config config) {
         this.filePath = config.getExcelPath();
@@ -89,11 +92,9 @@ public class ExcelProductDAO implements ProductDAO {
             try {
                 return Integer.parseInt(cell.getStringCellValue().trim());
             } catch (NumberFormatException e) {
-                // Если строка не может быть преобразована в число, например, в случае с текстом
                 return 0; // или можно выбросить исключение в зависимости от логики
             }
         } else {
-            // В случае других типов данных, например, если ячейка пустая
             return 0;
         }
     }
@@ -110,7 +111,10 @@ public class ExcelProductDAO implements ProductDAO {
 
     @Override
     public void addProduct(String name, int count, Tag tag) {
-        int newId = nextProductId++;
+        int newId = freedIds.isEmpty() ? nextProductId++ : freedIds.iterator().next();  // Используем освобожденный ID, если он есть
+        if (!freedIds.isEmpty()) {
+            freedIds.remove(newId);  // Убираем использованный ID из освобожденных
+        }
         products.add(new Product(newId, name, count, tag));
         saveToFile();
     }
@@ -126,6 +130,7 @@ public class ExcelProductDAO implements ProductDAO {
     @Override
     public void deleteProduct(Product product) {
         products.remove(product);
+        freedIds.add(product.getId());  // Добавляем ID в освобожденные
         saveToFile();
     }
 
@@ -137,6 +142,7 @@ public class ExcelProductDAO implements ProductDAO {
     @Override
     public void deleteProductById(int id) {
         products.removeIf(p -> p.getId() == id);
+        freedIds.add(id);  // Добавляем ID в освобожденные
         saveToFile();
     }
 
@@ -161,7 +167,6 @@ public class ExcelProductDAO implements ProductDAO {
                 row.createCell(1).setCellValue(product.getName());
                 row.createCell(2).setCellValue(product.getCount());
 
-                // Проверка на null перед доступом к getTag()
                 if (product.getTag() != null) {
                     row.createCell(3).setCellValue(product.getTag().getId());
                 } else {

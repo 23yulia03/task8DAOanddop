@@ -42,6 +42,11 @@ public class ListProductDAO implements ProductDAO {
     }
 
     @Override
+    public void deleteProductById(int id) {
+        products.removeIf(p -> p.getId() == id);
+    }
+
+    @Override
     public void addTag(int id, String name) {
         tags.add(new Tag(id, name));
     }

@@ -14,5 +14,8 @@ public interface ProductDAO {
     void addProduct(String name, int count, Tag tag) throws SQLException;
     void updateProduct(Product product, String newName, int newCount, Tag newTag) throws SQLException;
     void deleteProduct(Product product) throws SQLException;
+
+    void deleteProductById(int id) throws SQLException;
+
     void addTag(int id, String name) throws SQLException;
 }

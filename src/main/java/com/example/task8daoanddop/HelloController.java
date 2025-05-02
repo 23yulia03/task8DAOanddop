@@ -22,6 +22,7 @@ public class HelloController {
     @FXML private TextField tagField;
     @FXML private ComboBox<String> dataSourceComboBox;
     @FXML private TextField searchField;
+    @FXML private Label selectedDataSourceLabel;  // Ссылка на Label для выбранного источника данных
 
     private ProductDAO productDAO;
     private ProductDatabaseManager dbManager;
@@ -121,8 +122,8 @@ public class HelloController {
 
     @FXML
     private void addProduct() {
-        String name = nameField.getText();
-        String countText = countField.getText();
+        String name = nameField.getText().trim();
+        String countText = countField.getText().trim();
         Tag tag = tagComboBox.getValue();
 
         if (name.isEmpty() || countText.isEmpty() || tag == null) {
@@ -135,8 +136,12 @@ public class HelloController {
             dbManager.addProductToAll(name, count, tag);
             refreshData();
             clearFields();
-        } catch (NumberFormatException | SQLException e) {
-            showAlert("Ошибка", "Количество должно быть числом!");
+        } catch (NumberFormatException e) {
+            e.printStackTrace();
+            showAlert("Ошибка", "Количество должно быть целым числом (например, 6)!");
+        } catch (SQLException e) {
+            e.printStackTrace();
+            showAlert("Ошибка", "Ошибка базы данных: " + e.getMessage());
         }
     }
 
@@ -218,6 +223,7 @@ public class HelloController {
             productDAO = dbManager.getDAO(currentSource);
             refreshData();
             clearFields();
+            selectedDataSourceLabel.setText(currentSource);  // Обновляем текст выбранного источника данных
         } catch (Exception e) {
             showAlert("Ошибка", "Не удалось переключить источник данных: " + e.getMessage());
         }

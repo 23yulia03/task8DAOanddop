@@ -10,6 +10,7 @@ public class PostgresProductDAO implements ProductDAO {
     private final String password;
     private final ObservableList<Product> products = FXCollections.observableArrayList();
     private final ObservableList<Tag> tags = FXCollections.observableArrayList();
+    private int nextProductId = 1;  // Переменная для следующего ID
 
     public PostgresProductDAO(Config config) throws SQLException {
         this.url = config.getDbUrl();
@@ -43,15 +44,18 @@ public class PostgresProductDAO implements ProductDAO {
         try (Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT * FROM products")) {
             products.clear();
+            int maxId = 0;
+
             while (rs.next()) {
+                int id = rs.getInt("id");
+                maxId = Math.max(maxId, id);  // найти максимальный id
+
                 int tagId = rs.getInt("tag_id");
                 Tag tag = findTagById(tagId);
-                products.add(new Product(
-                        rs.getInt("id"),
-                        rs.getString("name"),
-                        rs.getInt("count"),
-                        tag));
+                products.add(new Product(id, rs.getString("name"), rs.getInt("count"), tag));
             }
+
+            nextProductId = maxId + 1;  // установить следующий доступный id
         }
     }
 
@@ -74,20 +78,18 @@ public class PostgresProductDAO implements ProductDAO {
 
     @Override
     public void addProduct(String name, int count, Tag tag) throws SQLException {
-        String sql = "INSERT INTO products (name, count, tag_id) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO products (id, name, count, tag_id) VALUES (?, ?, ?, ?)";
         try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setString(1, name);
-            stmt.setInt(2, count);
-            stmt.setInt(3, tag.getId());
+            stmt.setInt(1, nextProductId);      // вручную устанавливаем id
+            stmt.setString(2, name);
+            stmt.setInt(3, count);
+            stmt.setInt(4, tag.getId());
             stmt.executeUpdate();
 
-            try (ResultSet rs = stmt.getGeneratedKeys()) {
-                if (rs.next()) {
-                    products.add(new Product(rs.getInt(1), name, count, tag));
-                }
-            }
+            products.add(new Product(nextProductId, name, count, tag));
+            nextProductId++; // увеличить для следующего продукта
         }
     }
 
@@ -118,6 +120,50 @@ public class PostgresProductDAO implements ProductDAO {
             stmt.setInt(1, product.getId());
             stmt.executeUpdate();
             products.remove(product);
+
+            // Перераспределение ID
+            reindexProducts();
+        }
+    }
+
+    @Override
+    public void deleteProductById(int id) throws SQLException {
+        String sql = "DELETE FROM products WHERE id = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            stmt.executeUpdate();
+            products.removeIf(p -> p.getId() == id);
+
+            // Перераспределение ID после удаления
+            reindexProducts();
+        }
+    }
+
+    // Перераспределение ID товаров
+    private void reindexProducts() throws SQLException {
+        int newId = 1; // Начинаем с 1
+        for (Product product : products) {
+            if (product.getId() != newId) {
+                product.setId(newId);
+                updateProductInDatabase(product); // Обновляем ID в базе данных
+            }
+            newId++;
+        }
+
+        // Устанавливаем следующий ID, который будет использован для добавления
+        nextProductId = newId;
+    }
+
+    // Обновление ID товара в базе данных
+    private void updateProductInDatabase(Product product) throws SQLException {
+        String sql = "UPDATE products SET id = ? WHERE id = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, product.getId());
+            stmt.setInt(2, product.getId());  // старый id, для обновления
+            stmt.executeUpdate();
         }
     }
 

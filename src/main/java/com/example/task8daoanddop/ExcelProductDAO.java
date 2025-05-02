@@ -48,6 +48,9 @@ public class ExcelProductDAO implements ProductDAO {
             Sheet sheet = workbook.getSheetAt(0);
             Iterator<Row> rowIterator = sheet.iterator();
 
+            // Пропускаем первую строку, так как это заголовок
+            rowIterator.next();  // Пропускаем первую строку
+
             while (rowIterator.hasNext()) {
                 Row row = rowIterator.next();
                 try {
@@ -131,6 +134,12 @@ public class ExcelProductDAO implements ProductDAO {
         tags.add(new Tag(id, name));
     }
 
+    @Override
+    public void deleteProductById(int id) {
+        products.removeIf(p -> p.getId() == id);
+        saveToFile();
+    }
+
     private void saveToFile() {
         try (Workbook workbook = new XSSFWorkbook();
              FileOutputStream fos = new FileOutputStream(filePath)) {
@@ -144,14 +153,20 @@ public class ExcelProductDAO implements ProductDAO {
             headerRow.createCell(2).setCellValue("Count");
             headerRow.createCell(3).setCellValue("Tag ID");
 
-            // Данные
+            // Данные продуктов начинаются с первой строки
             for (int i = 0; i < products.size(); i++) {
-                Row row = sheet.createRow(i + 1);
+                Row row = sheet.createRow(i + 1);  // Данные начинаются с индекса 1
                 Product product = products.get(i);
                 row.createCell(0).setCellValue(product.getId());
                 row.createCell(1).setCellValue(product.getName());
                 row.createCell(2).setCellValue(product.getCount());
-                row.createCell(3).setCellValue(product.getTag().getId());
+
+                // Проверка на null перед доступом к getTag()
+                if (product.getTag() != null) {
+                    row.createCell(3).setCellValue(product.getTag().getId());
+                } else {
+                    row.createCell(3).setCellValue(0);  // Если тег null, ставим дефолтное значение
+                }
             }
 
             workbook.write(fos);

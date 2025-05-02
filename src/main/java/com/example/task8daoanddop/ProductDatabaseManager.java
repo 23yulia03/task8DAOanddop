@@ -1,5 +1,7 @@
 package com.example.task8daoanddop;
 
+import javafx.collections.ObservableList;
+
 import java.sql.SQLException;
 
 public class ProductDatabaseManager {
@@ -20,15 +22,33 @@ public class ProductDatabaseManager {
     }
 
     public void updateProductInAll(Product product, String newName, int newCount, Tag newTag) throws SQLException {
-        postgresDAO.updateProduct(product, newName, newCount, newTag);
-        excelDAO.updateProduct(product, newName, newCount, newTag);
-        memoryDAO.updateProduct(product, newName, newCount, newTag);
+        int id = product.getId();
+        // Получаем продукт из каждого DAO по ID
+        Product postgresProduct = findProductById(postgresDAO.getProducts(), id);
+        Product excelProduct = findProductById(excelDAO.getProducts(), id);
+        Product memoryProduct = findProductById(memoryDAO.getProducts(), id);
+
+        if (postgresProduct != null)
+            postgresDAO.updateProduct(postgresProduct, newName, newCount, newTag);
+        if (excelProduct != null)
+            excelDAO.updateProduct(excelProduct, newName, newCount, newTag);
+        if (memoryProduct != null)
+            memoryDAO.updateProduct(memoryProduct, newName, newCount, newTag);
+    }
+
+    private Product findProductById(ObservableList<Product> products, int id) {
+        return products.stream()
+                .filter(p -> p.getId() == id)
+                .findFirst()
+                .orElse(null);
     }
 
     public void deleteProductFromAll(Product product) throws SQLException {
-        postgresDAO.deleteProduct(product);
-        excelDAO.deleteProduct(product);
-        memoryDAO.deleteProduct(product);
+        // Удаляем по ID, а не по объекту
+        int id = product.getId();
+        postgresDAO.deleteProductById(id);
+        excelDAO.deleteProductById(id);
+        memoryDAO.deleteProductById(id);
     }
 
     public ProductDAO getDAO(String source) {

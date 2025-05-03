@@ -54,19 +54,21 @@
 
 ```bash
 src/
-├── com.example.task8daoanddop/
-│   ├── HelloApplication.java            # Запуск JavaFX-приложения
-│   ├── HelloController.java             # Контроллер интерфейса
-│   ├── Product.java                     # Модель продукта
-│   ├── Tag.java                         # Модель тега
-│   ├── ProductDAO.java                  # Интерфейс DAO
-│   ├── ListProductDAO.java              # DAO: In-Memory
-│   ├── PostgresProductDAO.java          # DAO: PostgreSQL
-│   ├── ExcelProductDAO.java             # DAO: Excel
-│   ├── ProductDAOFactory.java           # Фабрика DAO
-│   ├── ProductDatabaseManager.java      # Управление всеми источниками
-│   ├── Config.java                      # Настройки подключения PostgreSQL
-├── resources/
-│   ├── com.example.task8daoanddop/
-│   │   └── hello-view.fxml              # FXML-интерфейс
-├── .env                                 # Конфигурация PostgreSQL (login, password и т.п.)
+├── main/
+│   ├── java/
+│   │   └── com/example/task8daoanddop/ 
+│   │       ├── HelloApplication.java            # Запуск JavaFX-приложения
+│   │       ├── HelloController.java             # Контроллер интерфейса
+│   │       ├── Product.java                     # Модель продукта
+│   │       ├── Tag.java                         # Модель тега
+│   │       ├── ProductDAO.java                  # Интерфейс DAO
+│   │       ├── ListProductDAO.java              # DAO: In-Memory
+│   │       ├── PostgresProductDAO.java          # DAO: PostgreSQL
+│   │       ├── ExcelProductDAO.java             # DAO: Excel
+│   │       ├── ProductDAOFactory.java           # Фабрика DAO
+│   │       ├── ProductDatabaseManager.java      # Управление всеми источниками
+│   │       ├── Config.java                      # Настройки подключения PostgreSQL
+│   ├── resources/
+│   │   └── com/example/task8daoanddop/
+│   │       └── hello-view.fxml                  # FXML-интерфейс
+├── .env                                       # Конфигурация PostgreSQL (login, password и т.п.)
